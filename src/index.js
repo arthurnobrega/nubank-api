@@ -26,6 +26,10 @@ export default function(){
   }
 
   return {
+    setLoginToken: (token) => (
+      signInData = token
+    ),
+
     getLoginToken: ({ password, login }) => (
       fetch(apiURIs.token, {
         body: JSON.stringify({
