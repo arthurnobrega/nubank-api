@@ -23,11 +23,11 @@
   },
   "homepage": "https://github.com/Astrocoders/nubank-api#readme",
   "dependencies": {
-    "jest-cli": "^16.0.2",
     "lodash": "^4.16.4",
     "node-fetch": "^1.6.3"
   },
   "devDependencies": {
+    "jest-cli": "^16.0.2",
     "babel-cli": "^6.16.0",
     "babel-eslint": "^7.0.0",
     "babel-plugin-transform-decorators-legacy": "^1.3.4",
