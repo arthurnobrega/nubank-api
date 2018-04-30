@@ -23,7 +23,6 @@
   },
   "homepage": "https://github.com/Astrocoders/nubank-api#readme",
   "dependencies": {
-    "lodash": "^4.17.10",
     "node-fetch": "^2.1.2"
   },
   "devDependencies": {

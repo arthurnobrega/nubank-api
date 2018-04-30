@@ -14,7 +14,7 @@ exports.default = function () {
 
   function withSignedInUser(fn) {
     return function () {
-      if ((0, _lodash.isEmpty)(signInData)) {
+      if (Object.keys(signInData).length === 0) {
         throw new Error('[NuBank] You must sign in first');
       }
 
@@ -28,8 +28,8 @@ exports.default = function () {
     },
 
     getLoginToken: function getLoginToken(_ref) {
-      var password = _ref.password;
-      var login = _ref.login;
+      var password = _ref.password,
+          login = _ref.login;
       return (0, _nodeFetch2.default)(_api_uris2.default.token, {
         body: JSON.stringify({
           password: password,
@@ -112,8 +112,6 @@ var _nodeFetch = require('node-fetch');
 
 var _nodeFetch2 = _interopRequireDefault(_nodeFetch);
 
-var _lodash = require('lodash');
-
 var _api_uris = require('./api_uris');
 
 var _api_uris2 = _interopRequireDefault(_api_uris);
@@ -156,5 +154,6 @@ var REQUEST_HEADERS_SAUCE = exports.REQUEST_HEADERS_SAUCE = {
   'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36',
   'Origin': 'https://conta.nubank.com.br',
   'Referer': 'https://conta.nubank.com.br/'
+  /* eslint-enable quote-props */
+
 };
-/* eslint-enable quote-props */

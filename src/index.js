@@ -1,5 +1,4 @@
 import fetch from 'node-fetch'
-import { isEmpty } from 'lodash'
 import apiURIs from './api_uris'
 
 /* eslint-disable quote-props */
@@ -17,7 +16,7 @@ export default function(){
 
   function withSignedInUser(fn){
     return (...args) => {
-      if(isEmpty(signInData)){
+      if(Object.keys(signInData).length === 0){
         throw new Error('[NuBank] You must sign in first')
       }
 
