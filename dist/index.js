@@ -3,11 +3,12 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.REQUEST_HEADERS_SAUCE = undefined;
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 exports.default = function () {
-  var _desc, _value, _obj, _init, _init2, _init3;
+  var _desc, _value, _obj, _init, _init2, _init3, _init4;
 
   var signInData = {};
 
@@ -22,9 +23,12 @@ exports.default = function () {
   }
 
   return _obj = {
+    setLoginToken: function setLoginToken(token) {
+      signInData = token;
+    },
     getLoginToken: function getLoginToken(_ref) {
-      var password = _ref.password;
-      var login = _ref.login;
+      var password = _ref.password,
+          login = _ref.login;
       return (0, _nodeFetch2.default)(_api_uris2.default.token, {
         body: JSON.stringify({
           password: password,
@@ -37,9 +41,13 @@ exports.default = function () {
         headers: _extends({}, REQUEST_HEADERS_SAUCE)
       }).then(function (res) {
         return res.json();
-      }).then(function (data) {
+      })
+      /* eslint-disable no-return-assign */
+      .then(function (data) {
         return signInData = data;
-      });
+      })
+      /* eslint-enable no-return-assign */
+      ;
     },
 
     getCustomer: function getCustomer() {
@@ -72,6 +80,28 @@ exports.default = function () {
       });
     },
 
+    getBillByMonth: function getBillByMonth(monthFilter) {
+      return (0, _nodeFetch2.default)(signInData._links.bills_summary.href, {
+        headers: _extends({}, REQUEST_HEADERS_SAUCE, {
+          Authorization: 'Bearer ' + signInData.access_token
+        })
+      }).then(function (res) {
+        return res.json();
+      }).then(function (bills) {
+        var theBill = bills.find(function (bill) {
+          return bill.summary.open_date.indexOf(monthFilter) !== -1;
+        });
+
+        return (0, _nodeFetch2.default)(theBill._links.self.href, {
+          headers: _extends({}, REQUEST_HEADERS_SAUCE, {
+            Authorization: 'Bearer ' + signInData.access_token
+          })
+        });
+      }).then(function (res) {
+        return res.json();
+      });
+    },
+
     get signInData() {
       return signInData;
     }
@@ -95,6 +125,13 @@ exports.default = function () {
     writable: true,
     initializer: function initializer() {
       return _init3;
+    }
+  }), _obj), _applyDecoratedDescriptor(_obj, 'getBillByMonth', [withSignedInUser], (_init4 = Object.getOwnPropertyDescriptor(_obj, 'getBillByMonth'), _init4 = _init4 ? _init4.value : undefined, {
+    enumerable: true,
+    configurable: true,
+    writable: true,
+    initializer: function initializer() {
+      return _init4;
     }
   }), _obj)), _obj;
 };
@@ -140,10 +177,13 @@ function _applyDecoratedDescriptor(target, property, decorators, descriptor, con
   return desc;
 }
 
-var REQUEST_HEADERS_SAUCE = {
+/* eslint-disable quote-props */
+var REQUEST_HEADERS_SAUCE = exports.REQUEST_HEADERS_SAUCE = {
   'Content-Type': 'application/json',
   'X-Correlation-Id': 'WEB-APP.jO4x1',
   'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36',
   'Origin': 'https://conta.nubank.com.br',
   'Referer': 'https://conta.nubank.com.br/'
+  /* eslint-enable quote-props */
+
 };
