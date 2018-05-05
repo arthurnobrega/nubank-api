@@ -26,6 +26,7 @@ export default function(){
   }
 
   return {
+    setLoginToken: (token) => { signInData = token },
     getLoginToken: ({ password, login }) => (
       fetch(apiURIs.token, {
         body: JSON.stringify({
@@ -40,10 +41,10 @@ export default function(){
           ...REQUEST_HEADERS_SAUCE,
         },
       })
-      .then(res => res.json())
-      /* eslint-disable no-return-assign */
-      .then(data => signInData = data)
-      /* eslint-enable no-return-assign */
+        .then(res => res.json())
+        /* eslint-disable no-return-assign */
+        .then(data => signInData = data)
+        /* eslint-enable no-return-assign */
     ),
 
     /**
@@ -58,7 +59,7 @@ export default function(){
           Authorization: `Bearer ${signInData.access_token}`,
         },
       })
-      .then(res => res.json())
+        .then(res => res.json())
     ),
 
     /**
@@ -73,7 +74,7 @@ export default function(){
           Authorization: `Bearer ${signInData.access_token}`,
         },
       })
-      .then(res => res.json())
+        .then(res => res.json())
     ),
 
     /**
@@ -90,6 +91,32 @@ export default function(){
       }).then(res => res.json())
     ),
 
-    get signInData(){ return signInData },
+    /**
+     * Fetches all transactions from bill on specific month
+     * @returns {object} history
+    */
+    @withSignedInUser
+    getBillByMonth: monthFilter => (
+      fetch(signInData._links.bills_summary.href, {
+        headers: {
+          ...REQUEST_HEADERS_SAUCE,
+          Authorization: `Bearer ${signInData.access_token}`,
+        },
+      })
+        .then(res => res.json())
+        .then((bills) => {
+          const theBill = bills.find(bill => bill.summary.open_date.indexOf(monthFilter) !== -1)
+
+          return fetch(theBill._links.self.href, {
+            headers: {
+              ...REQUEST_HEADERS_SAUCE,
+              Authorization: `Bearer ${signInData.access_token}`,
+            },
+          })
+        })
+        .then(res => res.json())
+    ),
+
+    get signInData() { return signInData },
   }
 }
