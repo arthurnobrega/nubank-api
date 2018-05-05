@@ -87,8 +87,8 @@ exports.default = function () {
         })
       }).then(function (res) {
         return res.json();
-      }).then(function (bills) {
-        var theBill = bills.find(function (bill) {
+      }).then(function (json) {
+        var theBill = json.bills.find(function (bill) {
           return bill.summary.open_date.indexOf(monthFilter) !== -1;
         });
 

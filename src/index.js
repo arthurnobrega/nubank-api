@@ -104,8 +104,8 @@ export default function(){
         },
       })
         .then(res => res.json())
-        .then((bills) => {
-          const theBill = bills.find(bill => bill.summary.open_date.indexOf(monthFilter) !== -1)
+        .then((json) => {
+          const theBill = json.bills.find(bill => bill.summary.open_date.indexOf(monthFilter) !== -1)
 
           return fetch(theBill._links.self.href, {
             headers: {
