@@ -1,4 +1,6 @@
 import fetch from 'node-fetch'
+import fs from 'fs'
+import path from 'path'
 import { isEmpty } from 'lodash'
 import apiURIs from './api_uris'
 
@@ -116,6 +118,21 @@ export default function(){
         })
         .then(res => res.json())
     ),
+
+    @withSignedInUser
+    getCheckingTransactions: () => {
+      const graphql = fs.readFileSync(path.join('queries', 'account_feed.gql'))
+
+      return fetch(signInData._links.ghostflame.href, {
+        method: 'POST',
+        headers: {
+          ...REQUEST_HEADERS_SAUCE,
+          Authorization: `Bearer ${signInData.access_token}`,
+        },
+        body: JSON.stringify({ query: graphql }),
+      })
+        .then(res => res.json())
+    },
 
     get signInData() { return signInData },
   }
