@@ -8,7 +8,7 @@ exports.REQUEST_HEADERS_SAUCE = undefined;
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 exports.default = function () {
-  var _desc, _value, _obj, _init, _init2, _init3, _init4;
+  var _desc, _value, _obj, _init, _init2, _init3, _init4, _init5, _init6;
 
   var signInData = {};
 
@@ -102,6 +102,34 @@ exports.default = function () {
       });
     },
 
+    getCheckingBalance: function getCheckingBalance() {
+      var graphql = _fs2.default.readFileSync(_path2.default.join(__dirname, 'queries', 'account_balance.gql'), 'utf8');
+
+      return (0, _nodeFetch2.default)(signInData._links.ghostflame.href, {
+        method: 'POST',
+        headers: _extends({}, REQUEST_HEADERS_SAUCE, {
+          Authorization: 'Bearer ' + signInData.access_token
+        }),
+        body: JSON.stringify({ query: graphql })
+      }).then(function (res) {
+        return res.json();
+      });
+    },
+
+    getCheckingTransactions: function getCheckingTransactions() {
+      var graphql = _fs2.default.readFileSync(_path2.default.join(__dirname, 'queries', 'account_feed.gql'), 'utf8');
+
+      return (0, _nodeFetch2.default)(signInData._links.ghostflame.href, {
+        method: 'POST',
+        headers: _extends({}, REQUEST_HEADERS_SAUCE, {
+          Authorization: 'Bearer ' + signInData.access_token
+        }),
+        body: JSON.stringify({ query: graphql })
+      }).then(function (res) {
+        return res.json();
+      });
+    },
+
     get signInData() {
       return signInData;
     }
@@ -133,12 +161,34 @@ exports.default = function () {
     initializer: function initializer() {
       return _init4;
     }
+  }), _obj), _applyDecoratedDescriptor(_obj, 'getCheckingBalance', [withSignedInUser], (_init5 = Object.getOwnPropertyDescriptor(_obj, 'getCheckingBalance'), _init5 = _init5 ? _init5.value : undefined, {
+    enumerable: true,
+    configurable: true,
+    writable: true,
+    initializer: function initializer() {
+      return _init5;
+    }
+  }), _obj), _applyDecoratedDescriptor(_obj, 'getCheckingTransactions', [withSignedInUser], (_init6 = Object.getOwnPropertyDescriptor(_obj, 'getCheckingTransactions'), _init6 = _init6 ? _init6.value : undefined, {
+    enumerable: true,
+    configurable: true,
+    writable: true,
+    initializer: function initializer() {
+      return _init6;
+    }
   }), _obj)), _obj;
 };
 
 var _nodeFetch = require('node-fetch');
 
 var _nodeFetch2 = _interopRequireDefault(_nodeFetch);
+
+var _fs = require('fs');
+
+var _fs2 = _interopRequireDefault(_fs);
+
+var _path = require('path');
+
+var _path2 = _interopRequireDefault(_path);
 
 var _lodash = require('lodash');
 

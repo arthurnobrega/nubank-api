@@ -120,8 +120,23 @@ export default function(){
     ),
 
     @withSignedInUser
+    getCheckingBalance: () => {
+      const graphql = fs.readFileSync(path.join(__dirname, 'queries', 'account_balance.gql'), 'utf8')
+
+      return fetch(signInData._links.ghostflame.href, {
+        method: 'POST',
+        headers: {
+          ...REQUEST_HEADERS_SAUCE,
+          Authorization: `Bearer ${signInData.access_token}`,
+        },
+        body: JSON.stringify({ query: graphql }),
+      })
+        .then(res => res.json())
+    },
+
+    @withSignedInUser
     getCheckingTransactions: () => {
-      const graphql = fs.readFileSync(path.join('queries', 'account_feed.gql'))
+      const graphql = fs.readFileSync(path.join(__dirname, 'queries', 'account_feed.gql'), 'utf8')
 
       return fetch(signInData._links.ghostflame.href, {
         method: 'POST',

@@ -1,13 +1,13 @@
 {
   "name": "nubank",
-  "version": "1.1.5",
+  "version": "1.2.0",
   "description": "NuBank API",
   "main": "index.js",
   "scripts": {
     "test": "jest",
     "test:coverage": "jest --coverage",
     "test:watch": "jest --watch",
-    "pre-publish": "babel src/ --out-dir ./dist"
+    "pre-publish": "babel src/ --out-dir ./dist --copy-files"
   },
   "repository": {
     "type": "git",
