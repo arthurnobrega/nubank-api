@@ -1,9 +1,9 @@
 {
-    viewer {
-        savingsAccount {
-            currentSavingsBalance {
-                netAmount
-            }
-        }
-    }
+	viewer {
+		savingsAccount {
+			currentSavingsBalance {
+				netAmount
+			}
+		}
+	}
 }

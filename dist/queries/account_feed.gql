@@ -1,25 +1,25 @@
 {
-    viewer {
-        savingsAccount {
-            feed {
-                id
-                __typename
-                title
-                detail
-                postDate
-                ... on BillPaymentEvent {
-                    amount
-                }
-                ... on TransferInEvent {
-                    amount
-                }
-                ... on TransferOutEvent {
-                    amount
-                    destinationAccount {
-                        name
-                    }
-                }
-            }
+  viewer {
+    savingsAccount {
+      feed {
+        id
+        __typename
+        title
+        detail
+        postDate
+        ... on BarcodePaymentEvent {
+          amount
         }
+        ... on BillPaymentEvent {
+          amount
+        }
+        ... on TransferInEvent {
+          amount
+        }
+        ... on TransferOutEvent {
+          amount
+        }
+      }
     }
+  }
 }
