@@ -19,6 +19,9 @@
         ... on TransferOutEvent {
           amount
         }
+				... on TransferOutReversalEvent {
+					amount
+				}
       }
     }
   }
