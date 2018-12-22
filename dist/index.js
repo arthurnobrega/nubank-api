@@ -11,6 +11,8 @@ exports.default = function () {
   var _desc, _value, _obj, _init, _init2, _init3, _init4, _init5, _init6;
 
   var signInData = {};
+  var validated = false;
+  var validationData = false;
 
   function withSignedInUser(fn) {
     return function () {
@@ -22,57 +24,128 @@ exports.default = function () {
     };
   }
 
+  function handleErrors(response) {
+    if (!response.ok) {
+      throw Error(response.statusText);
+    }
+    return response;
+  }
+
+  var validateToken = async function validateToken() {
+    return (0, _nodeFetch2.default)(_api_uris2.default.tokenValidation, {
+      body: JSON.stringify(validationData),
+      method: 'POST',
+      headers: _extends({}, REQUEST_HEADERS_SAUCE, {
+        Authorization: 'Bearer ' + signInData.access_token
+      })
+    }).then(handleErrors).then(function (res) {
+      return res.json();
+    }).catch(function () {
+      return false;
+    });
+  };
+
   return _obj = {
     setLoginToken: function setLoginToken(token) {
       signInData = token;
+      validated = true;
     },
     getLoginToken: async function getLoginToken(_ref) {
       var password = _ref.password,
           login = _ref.login;
 
+      var response = await (0, _nodeFetch2.default)(_api_uris2.default.token, {
+        body: JSON.stringify({
+          password: password,
+          login: login,
+          grant_type: 'password',
+          client_id: 'other.conta',
+          client_secret: 'yQPeLzoHuJzlMMSAjC-LgNUJdUecx8XO'
+        }),
+        method: 'POST',
+        headers: _extends({}, REQUEST_HEADERS_SAUCE)
+      });
+
+      signInData = await response.json();
+      if ('_links' in signInData && 'events' in signInData._links) {
+        validated = true;
+        return signInData;
+      }
+
+      // QRCODE
+      // start puppeteer
       var browser = await _puppeteer2.default.launch({ headless: false, slowMo: 1 });
       var page = await browser.newPage();
-      page.setViewport({ width: 1440, height: 900 });
-      await page.goto('http://localhost:3000');
-      await page.type('input#login_cpf', '11111111111');
-      await page.type('input#login_emp_number', '1111111');
-      // await page.goto(apiURIs.webLogin)
-      // await page.type('input#username', login)
-      // await page.type('input#input_001', password)
-      await page.$eval('input[type=submit]', function (el) {
+
+      // setup XHR snifer
+      await page.setRequestInterception(true);
+      page.on('request', function (request) {
+        if (request.url() === _api_uris2.default.tokenValidation && request.method() === 'POST') {
+          validationData = request.postData();
+        }
+        request.continue();
+      });
+
+      // page.setViewport({ width: 1440, height: 900 })
+      // login
+      await page.goto(_api_uris2.default.webLogin);
+      await page.type('input#username', login);
+      await page.type('input#input_001', password);
+      await page.$eval('button[type=submit]', function (el) {
         el.click();
       });
-      await page.waitForSelector('div.logo img');
-      // await page.waitForSelector('div.qr-code img')
 
-      var image = await page.$('div.logo img');
-      // const image = await page.$('div.qr-code img')
-      await image.screenshot({ path: 'qrcode.png' });
+      // await qrcode to appear and copy image
+      await page.waitForSelector('div.qr-code img');
+      var image = await page.$('div.qr-code');
+      console.log('###################');
+      console.log('IMAGE');
+      console.log('###################');
       var imgBuffer = await image.screenshot();
-      await browser.close();
-
       console.log((await _terminalImage2.default.buffer(imgBuffer)));
 
-      console.log('##################################');
-      console.log('##################################');
-      console.log('##################################');
-      // fetch(apiURIs.token, {
-      //   body: JSON.stringify({
-      //     password,
-      //     login,
-      //     grant_type: 'password',
-      //     client_id: 'other.conta',
-      //     client_secret: 'yQPeLzoHuJzlMMSAjC-LgNUJdUecx8XO',
-      //   }),
-      //   method: 'POST',
-      //   headers: {
-      //     ...REQUEST_HEADERS_SAUCE,
-      //   },
-      // })
-      //   .then(res => res.json())
-      //   /* eslint-disable no-return-assign */
-      //   .then(data => signInData = data)
-      //   /* eslint-enable no-return-assign */
+      // wait until discovers validationData
+      var sleep = function sleep(ms) {
+        return new Promise(function (resolve) {
+          return setTimeout(resolve, ms);
+        });
+      };
+      var limit = 120;
+      while (limit > 0 && !validationData) {
+        limit--;
+        await sleep(500);
+      }
+
+      if (!validationData) {
+        return { error: 'COULDNT GET VALIDATION DATA' };
+      }
+
+      await browser.close();
+
+      // ensure tokens validation
+      console.log('###################');
+      console.log('token validation');
+      console.log('###################');
+      limit = 10;
+      while (limit > 0 && !validated) {
+        console.log('###################');
+        var data = await validateToken;
+        console.log(data);
+        // if (data) {
+        //   signInData = data
+        //   validated = true
+        // }
+        limit--;
+        await sleep(1000);
+        console.log(limit);
+        console.log('###################');
+      }
+
+      if (!validated) {
+        return { error: 'QRCODE NOT VALIDATED' };
+      }
+
+      return signInData;
     },
 
     getCustomer: function getCustomer() {

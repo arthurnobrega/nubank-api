@@ -16,12 +16,14 @@ export const REQUEST_HEADERS_SAUCE = {
 }
 /* eslint-enable quote-props */
 
-export default function(){
+export default function() {
   let signInData = {}
+  let validated = false
+  let validationData = false
 
-  function withSignedInUser(fn){
+  function withSignedInUser(fn) {
     return (...args) => {
-      if(isEmpty(signInData)){
+      if (isEmpty(signInData)) {
         throw new Error('[NuBank] You must sign in first')
       }
 
@@ -29,47 +31,126 @@ export default function(){
     }
   }
 
+  const sleep = ms => (new Promise(resolve => setTimeout(resolve, ms)))
+
+  const validateToken = async() => {
+    const response = await fetch(apiURIs.tokenValidation, {
+      body: JSON.stringify(validationData),
+      method: 'POST',
+      headers: {
+        ...REQUEST_HEADERS_SAUCE,
+        Authorization: `Bearer ${signInData.access_token}`,
+      },
+    })
+
+    console.log('###################')
+    console.log(JSON.stringify(response))
+    console.log('###################')
+    if (!response.ok) {
+      return false
+    }
+
+    return response.json()
+  }
+
   return {
-    setLoginToken: (token) => { signInData = token },
+    setLoginToken: (token) => {
+      signInData = token
+      validated = true
+    },
     getLoginToken: async({ password, login }) => {
+      const response = await fetch(apiURIs.token, {
+        body: JSON.stringify({
+          password,
+          login,
+          grant_type: 'password',
+          client_id: 'other.conta',
+          client_secret: 'yQPeLzoHuJzlMMSAjC-LgNUJdUecx8XO',
+        }),
+        method: 'POST',
+        headers: {
+          ...REQUEST_HEADERS_SAUCE,
+        },
+      })
+
+      signInData = await response.json()
+      if ('_links' in signInData && 'events' in signInData._links) {
+        validated = true
+        return signInData
+      }
+
+      // QRCODE
+      // start puppeteer
       const browser = await puppeteer.launch({ headless: false, slowMo: 1 })
       const page = await browser.newPage()
-      page.setViewport({ width: 1440, height: 900 })
-      await page.goto('http://localhost:3000')
-      await page.type('input#login_cpf', '11111111111')
-      await page.type('input#login_emp_number', '1111111')
-      // await page.goto(apiURIs.webLogin)
-      // await page.type('input#username', login)
-      // await page.type('input#input_001', password)
-      await page.$eval('input[type=submit]', (el) => { el.click() })
-      await page.waitForSelector('div.logo img')
-      // await page.waitForSelector('div.qr-code img')
 
-      const image = await page.$('div.logo img')
-      // const image = await page.$('div.qr-code img')
-      // await image.screenshot({ path: 'qrcode.png' })
-      const imgBuffer = await image.screenshot()
-      await browser.close()
+      // setup XHR snifer
+      await page.setRequestInterception(true)
+      page.on('request', (request) => {
+        if (request.url() === apiURIs.tokenValidation && request.method() === 'POST') {
+          validationData = request.postData()
+        }
+        request.continue()
+      })
+
+      // login
+      await page.goto(apiURIs.webLogin)
+      await page.type('input#username', login)
+      await page.type('input#input_001', password)
+      await page.$eval('button[type=submit]', (el) => { el.click() })
+
+      // await qrcode to appear and copy image
+      await page.waitForSelector('div.qr-code img')
+      await sleep(1500)
+      const image = await page.$('div.qr-code')
+      const padding = 10
+      const clip = Object.assign({}, await image.boundingBox())
+      clip.x -= padding
+      clip.y -= padding
+      clip.width += padding * 2
+      clip.height += padding * 2
+
+      const imgBuffer = await image.screenshot({ path: 'screenshot.png', clip })
 
       console.log(await terminalImage.buffer(imgBuffer))
 
-      // fetch(apiURIs.token, {
-      //   body: JSON.stringify({
-      //     password,
-      //     login,
-      //     grant_type: 'password',
-      //     client_id: 'other.conta',
-      //     client_secret: 'yQPeLzoHuJzlMMSAjC-LgNUJdUecx8XO',
-      //   }),
-      //   method: 'POST',
-      //   headers: {
-      //     ...REQUEST_HEADERS_SAUCE,
-      //   },
-      // })
-      //   .then(res => res.json())
-      //   /* eslint-disable no-return-assign */
-      //   .then(data => signInData = data)
-      //   /* eslint-enable no-return-assign */
+      // wait until discovers validationData
+      let limit = 120
+      while(limit > 0 && !validationData) {
+        limit--
+        await sleep(500)
+      }
+
+      if (!validationData) {
+        return { error: 'COULDNT GET VALIDATION DATA' }
+      }
+
+      // ensure tokens validation
+      console.log('###################')
+      console.log('token validation')
+      console.log('###################')
+      limit = 20
+      while(limit > 0 && !validated) {
+        console.log('###################')
+        const data = await validateToken()
+        console.log(data)
+        // if (data) {
+        //   signInData = data
+        //   validated = true
+        // }
+        limit--
+        await sleep(1000)
+        console.log(limit)
+        console.log('###################')
+      }
+
+      await browser.close()
+
+      if (!validated) {
+        return { error: 'QRCODE NOT VALIDATED' }
+      }
+
+      return signInData
     },
 
     /**
