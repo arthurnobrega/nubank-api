@@ -22,6 +22,9 @@
 				... on TransferOutReversalEvent {
 					amount
 				}
+        ... on DebitPurchaseEvent {
+          amount
+        }
       }
     }
   }
